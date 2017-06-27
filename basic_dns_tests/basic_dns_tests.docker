@@ -1,0 +1,16 @@
+FROM monroe/base
+
+MAINTAINER michelinakis.foivos@gmail.com
+
+RUN apt-get update && apt-get install -y --force-yes \
+	dnsutils  \
+	&& apt-get clean -y --force-yes clean \
+        && apt-get -y --force-yes autoremove \
+        # Cleanup
+        && rm -rf /var/lib/apt/lists/* /tmp/* /root/.cache/* /var/tmp/* /usr/share/doc /usr/share/man /usr/share/locale /var/cache/debconf/*-old
+
+RUN mkdir -p .opt/basic_dns_tests
+COPY files/* /opt/basic_dns_tests/
+
+
+ENTRYPOINT ["dumb-init", "--", "/usr/bin/python", "/opt/basic_dns_tests/main.py"]

@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import sys
+import psycopg2
+from psycopg2.extensions import AsIs
+import os
+import json
+import shutil
+import time
+
+
+try:
+    conn = psycopg2.connect("dbname='cloudmap' user='removedUser' host='localhost' password='removedPassword'")
+    print("connected!")
+except:
+    print("I am unable to connect to the database")
+    sys.exit(1)
+cur = conn.cursor()
+
+
+# case for traceroute and dig
+# since we run this periodically we want to update only the ones that do not already have an entry, hence the "metadataTimestamp is NULL"
+# since the fetch time of the results and the metadata differ, we accept as valid entries only metadata that are at most 10 minutes away from the starTime and endTime
+# if we can not find that we do not put metadata
+digQuery = """select experiment_id, dig_id, nodeid, interface, startTime, endTime 
+from cloudmap.digParameters
+where (sufficientMetadataValues IS NULL OR NOT sufficientMetadataValues);"""
+cur.execute(digQuery)
+conn.commit()
+rows = cur.fetchall()
